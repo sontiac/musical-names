@@ -124,7 +124,7 @@ function NamePlayerInner() {
       {/* Input + controls — visible when not playing and not in tap-to-play state */}
       {!isPlaying && !needsTap && (
         <motion.div
-          className="absolute bottom-12 sm:bottom-20 flex flex-col items-center gap-4"
+          className={`absolute flex flex-col items-center gap-4 ${isComplete ? 'bottom-12 sm:bottom-20' : ''}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: isComplete ? 0.3 : 0 }}
