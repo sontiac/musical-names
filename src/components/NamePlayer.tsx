@@ -25,6 +25,7 @@ function NamePlayerInner() {
 
     const cleaned = nameToPlay.trim();
     setDisplayName(cleaned);
+    setName(cleaned);
     setIsPlaying(true);
     setIsComplete(false);
     setRings([]);
@@ -44,6 +45,11 @@ function NamePlayerInner() {
       onComplete: () => {
         setIsPlaying(false);
         setIsComplete(true);
+        // Select input text so user can immediately type a new name
+        setTimeout(() => {
+          inputRef.current?.focus();
+          inputRef.current?.select();
+        }, 400);
         setTimeout(() => {
           setRings(prev => prev.slice(-5));
         }, 2000);
@@ -58,7 +64,6 @@ function NamePlayerInner() {
       setName(urlName);
       setDisplayName(urlName);
       setHasAutoPlayed(true);
-      // Browsers block AudioContext without user gesture — show tap fallback for shared links
       setNeedsTap(true);
     }
   }, [searchParams, hasAutoPlayed]);
@@ -77,18 +82,8 @@ function NamePlayerInner() {
     });
   };
 
-  const handleReset = () => {
-    setIsComplete(false);
-    setIsPlaying(false);
-    setDisplayName('');
-    setRings([]);
-    setActiveIndex(-1);
-    setName('');
-    window.history.replaceState({}, '', window.location.pathname);
-    setTimeout(() => inputRef.current?.focus(), 100);
-  };
-
-  const showInput = !isPlaying && !isComplete && !needsTap;
+  // Whether we're in the initial "haven't played anything yet" state
+  const isInitial = !isPlaying && !isComplete && !needsTap && !displayName;
 
   return (
     <main className="relative flex flex-col items-center justify-center min-h-dvh px-6 overflow-hidden select-none">
@@ -101,57 +96,7 @@ function NamePlayerInner() {
       />
 
       <AnimatePresence mode="wait">
-        {showInput && (
-          <motion.div
-            key="input"
-            className="absolute flex flex-col items-center gap-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.4 }}
-          >
-            <h1 className="text-2xl sm:text-3xl font-light text-white/80 text-center tracking-wide">
-              What does your name sound like?
-            </h1>
-            <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">
-              <input
-                ref={inputRef}
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Type a name..."
-                maxLength={30}
-                autoFocus
-                className="w-72 sm:w-80 px-6 py-4 text-xl text-center bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 outline-none focus:border-white/30 focus:bg-white/[0.07] transition-all duration-300"
-              />
-              <div className="flex gap-3">
-                <motion.button
-                  type="submit"
-                  disabled={!name.trim()}
-                  className="px-8 py-3 text-sm font-medium tracking-widest uppercase text-white/60 border border-white/10 rounded-full hover:text-white hover:border-white/30 transition-all duration-300 disabled:opacity-20 disabled:cursor-not-allowed"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Play
-                </motion.button>
-                <motion.button
-                  type="button"
-                  onClick={() => {
-                    const randomName = getRandomName();
-                    setName(randomName);
-                    handlePlay(randomName);
-                  }}
-                  className="px-6 py-3 text-sm font-medium tracking-widest uppercase text-white/40 border border-white/[0.06] rounded-full hover:text-white/70 hover:border-white/20 transition-all duration-300"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Random
-                </motion.button>
-              </div>
-            </form>
-          </motion.div>
-        )}
-
+        {/* Tap to play fallback for shared links */}
         {needsTap && !isPlaying && !isComplete && (
           <motion.div
             key="tap"
@@ -174,51 +119,87 @@ function NamePlayerInner() {
             </motion.button>
           </motion.div>
         )}
-
-        {isComplete && (
-          <motion.div
-            key="controls"
-            className="absolute bottom-16 sm:bottom-24 flex items-center gap-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.4 }}
-          >
-            {/* Play again — visual circle button with play icon */}
-            <motion.button
-              onClick={() => handlePlay(displayName)}
-              className="flex items-center justify-center w-14 h-14 rounded-full border border-white/15 bg-white/5 text-white/60 hover:text-white hover:border-white/30 hover:bg-white/10 transition-all"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              title="Play again"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8 5v14l11-7z"/>
-              </svg>
-            </motion.button>
-            <motion.button
-              onClick={handleShare}
-              className="px-6 py-3 text-sm font-medium tracking-widest uppercase text-white/60 border border-white/10 rounded-full hover:text-white hover:border-white/30 transition-all"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Share
-            </motion.button>
-            <motion.button
-              onClick={handleReset}
-              className="px-6 py-3 text-sm font-medium tracking-widest uppercase text-white/60 border border-white/10 rounded-full hover:text-white hover:border-white/30 transition-all"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              New name
-            </motion.button>
-          </motion.div>
-        )}
       </AnimatePresence>
 
+      {/* Input + controls — visible when not playing and not in tap-to-play state */}
+      {!isPlaying && !needsTap && (
+        <motion.div
+          className="absolute bottom-12 sm:bottom-20 flex flex-col items-center gap-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: isComplete ? 0.3 : 0 }}
+        >
+          {isInitial && (
+            <h1 className="text-2xl sm:text-3xl font-light text-white/80 text-center tracking-wide mb-2">
+              What does your name sound like?
+            </h1>
+          )}
+
+          <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">
+            <input
+              ref={inputRef}
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Type a name..."
+              maxLength={30}
+              autoFocus
+              className="w-72 sm:w-80 px-6 py-4 text-xl text-center bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 outline-none focus:border-white/30 focus:bg-white/[0.07] transition-all duration-300"
+            />
+            <div className="flex items-center gap-3">
+              {/* Play / replay button */}
+              <motion.button
+                type="submit"
+                disabled={!name.trim()}
+                className="flex items-center justify-center w-12 h-12 rounded-full border border-white/15 bg-white/5 text-white/60 hover:text-white hover:border-white/30 hover:bg-white/10 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                title={isComplete ? "Play again" : "Play"}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </motion.button>
+
+              {/* Random */}
+              <motion.button
+                type="button"
+                onClick={() => {
+                  const randomName = getRandomName();
+                  setName(randomName);
+                  handlePlay(randomName);
+                }}
+                className="px-6 py-3 text-sm font-medium tracking-widest uppercase text-white/40 border border-white/[0.06] rounded-full hover:text-white/70 hover:border-white/20 transition-all duration-300"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Random
+              </motion.button>
+
+              {/* Share — only after a name has been played */}
+              {isComplete && (
+                <motion.button
+                  type="button"
+                  onClick={handleShare}
+                  className="px-6 py-3 text-sm font-medium tracking-widest uppercase text-white/40 border border-white/[0.06] rounded-full hover:text-white/70 hover:border-white/20 transition-all"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Share
+                </motion.button>
+              )}
+            </div>
+          </form>
+        </motion.div>
+      )}
+
+      {/* Toast */}
       <AnimatePresence>
         {showToast && (
           <motion.div
-            className="fixed bottom-8 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full text-white/80 text-sm"
+            className="fixed bottom-4 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full text-white/80 text-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
