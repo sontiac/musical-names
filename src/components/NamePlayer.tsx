@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { playName, getLetterColor } from '@/lib/audio';
+import { getRandomName } from '@/lib/names';
 import Visualizer, { type Ring } from '@/components/Visualizer';
 
 function NamePlayerInner() {
@@ -123,15 +124,30 @@ function NamePlayerInner() {
                 autoFocus
                 className="w-72 sm:w-80 px-6 py-4 text-xl text-center bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 outline-none focus:border-white/30 focus:bg-white/[0.07] transition-all duration-300"
               />
-              <motion.button
-                type="submit"
-                disabled={!name.trim()}
-                className="px-8 py-3 text-sm font-medium tracking-widest uppercase text-white/60 border border-white/10 rounded-full hover:text-white hover:border-white/30 transition-all duration-300 disabled:opacity-20 disabled:cursor-not-allowed"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Play
-              </motion.button>
+              <div className="flex gap-3">
+                <motion.button
+                  type="submit"
+                  disabled={!name.trim()}
+                  className="px-8 py-3 text-sm font-medium tracking-widest uppercase text-white/60 border border-white/10 rounded-full hover:text-white hover:border-white/30 transition-all duration-300 disabled:opacity-20 disabled:cursor-not-allowed"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Play
+                </motion.button>
+                <motion.button
+                  type="button"
+                  onClick={() => {
+                    const randomName = getRandomName();
+                    setName(randomName);
+                    handlePlay(randomName);
+                  }}
+                  className="px-6 py-3 text-sm font-medium tracking-widest uppercase text-white/40 border border-white/[0.06] rounded-full hover:text-white/70 hover:border-white/20 transition-all duration-300"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Random
+                </motion.button>
+              </div>
             </form>
           </motion.div>
         )}
@@ -162,18 +178,22 @@ function NamePlayerInner() {
         {isComplete && (
           <motion.div
             key="controls"
-            className="absolute bottom-16 sm:bottom-24 flex gap-4"
+            className="absolute bottom-16 sm:bottom-24 flex items-center gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.4 }}
           >
+            {/* Play again — visual circle button with play icon */}
             <motion.button
               onClick={() => handlePlay(displayName)}
-              className="px-6 py-3 text-sm font-medium tracking-widest uppercase text-white/60 border border-white/10 rounded-full hover:text-white hover:border-white/30 transition-all"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              className="flex items-center justify-center w-14 h-14 rounded-full border border-white/15 bg-white/5 text-white/60 hover:text-white hover:border-white/30 hover:bg-white/10 transition-all"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              title="Play again"
             >
-              Play again
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
             </motion.button>
             <motion.button
               onClick={handleShare}
