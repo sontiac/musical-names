@@ -420,13 +420,23 @@ function playJazz(ctx: AudioContext, masterGain: GainNode, letters: string[], on
 }
 
 function playFire(ctx: AudioContext, masterGain: GainNode, letters: string[], onsetInterval: number, now: number, callbacks: PlaybackCallbacks) {
-  // Short bright reverb — close and intense
+  // Medium reverb — warm room, not sterile
   const convolver = ctx.createConvolver();
-  convolver.buffer = createReverbImpulse(ctx, 0.8, 5);
-  const dryGain = ctx.createGain(); dryGain.gain.value = 0.85;
-  const wetGain = ctx.createGain(); wetGain.gain.value = 0.15;
+  convolver.buffer = createReverbImpulse(ctx, 1.5, 3);
+  const dryGain = ctx.createGain(); dryGain.gain.value = 0.7;
+  const wetGain = ctx.createGain(); wetGain.gain.value = 0.3;
   masterGain.connect(dryGain); masterGain.connect(convolver); convolver.connect(wetGain);
   dryGain.connect(ctx.destination); wetGain.connect(ctx.destination);
+
+  // Waveshaper for warm overdrive (soft clipping)
+  const waveshaper = ctx.createWaveShaper();
+  const curve = new Float32Array(1024);
+  for (let j = 0; j < 1024; j++) {
+    const x = (j / 512) - 1;
+    curve[j] = (Math.PI + 3) * x / (Math.PI + 3 * Math.abs(x)); // soft clip
+  }
+  waveshaper.curve = curve;
+  waveshaper.oversample = '2x';
 
   const scale = SCALES.fire;
   letters.forEach((letter, i) => {
@@ -436,35 +446,48 @@ function playFire(ctx: AudioContext, masterGain: GainNode, letters: string[], on
     const startTime = now + i * onsetInterval;
     setTimeout(() => callbacks.onLetterStart(i, letter), Math.max(0, (startTime - ctx.currentTime) * 1000));
 
-    const noteDur = onsetInterval * 0.85;
+    const noteDur = onsetInterval * 1.3; // longer, overlapping — continuous heat
 
-    // Main sawtooth with resonant filter sweep (opens on attack)
-    const osc = ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.value = freq;
-    const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.Q.value = 8;
-    // Filter sweep: starts high (bright attack), sweeps down (darkens)
-    filt.frequency.setValueAtTime(6000, startTime);
-    filt.frequency.exponentialRampToValueAtTime(800, startTime + noteDur * 0.7);
+    // Main tone: sine through waveshaper for warm distortion
+    const osc = ctx.createOscillator(); osc.type = 'sine';
+    // Pitch bend: starts slightly sharp, bends down to target — like a flame licking up
+    osc.frequency.setValueAtTime(freq * 1.03, startTime);
+    osc.frequency.exponentialRampToValueAtTime(freq, startTime + 0.08);
+
+    // Low-pass filter — NO resonance, just warmth
+    const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.Q.value = 0.5;
+    filt.frequency.setValueAtTime(3000, startTime);
+    filt.frequency.exponentialRampToValueAtTime(1000, startTime + noteDur * 0.6);
 
     const g = ctx.createGain();
     g.gain.setValueAtTime(0, startTime);
-    g.gain.linearRampToValueAtTime(0.6, startTime + 0.003); // very fast attack
-    g.gain.linearRampToValueAtTime(0.4, startTime + 0.05);
+    g.gain.linearRampToValueAtTime(0.7, startTime + 0.01); // fast but not instant
+    g.gain.linearRampToValueAtTime(0.45, startTime + noteDur * 0.4);
     g.gain.exponentialRampToValueAtTime(0.01, startTime + noteDur);
 
-    osc.connect(filt); filt.connect(g); g.connect(masterGain);
-    osc.start(startTime); osc.stop(startTime + noteDur + 0.05);
+    osc.connect(waveshaper); waveshaper.connect(filt); filt.connect(g); g.connect(masterGain);
+    osc.start(startTime); osc.stop(startTime + noteDur + 0.1);
 
-    // Noise burst on attack — crackle/spark
-    const crackleLen = 0.04;
+    // Sub-octave for weight and warmth
+    const sub = ctx.createOscillator(); sub.type = 'sine'; sub.frequency.value = freq * 0.5;
+    const subGain = ctx.createGain();
+    subGain.gain.setValueAtTime(0, startTime);
+    subGain.gain.linearRampToValueAtTime(0.2, startTime + 0.02);
+    subGain.gain.exponentialRampToValueAtTime(0.01, startTime + noteDur * 0.8);
+    sub.connect(subGain); subGain.connect(masterGain);
+    sub.start(startTime); sub.stop(startTime + noteDur + 0.1);
+
+    // Subtle ember crackle — lower freq, longer, quieter
+    const crackleLen = 0.08;
     const crackleBuffer = ctx.createBuffer(1, ctx.sampleRate * crackleLen, ctx.sampleRate);
     const crackleData = crackleBuffer.getChannelData(0);
     for (let j = 0; j < crackleData.length; j++) crackleData[j] = Math.random() * 2 - 1;
     const crackle = ctx.createBufferSource(); crackle.buffer = crackleBuffer;
-    const crackleFilt = ctx.createBiquadFilter(); crackleFilt.type = 'highpass'; crackleFilt.frequency.value = 2000;
+    const crackleBp = ctx.createBiquadFilter(); crackleBp.type = 'bandpass'; crackleBp.frequency.value = 800; crackleBp.Q.value = 1;
     const crackleGain = ctx.createGain();
-    crackleGain.gain.setValueAtTime(0.25, startTime);
+    crackleGain.gain.setValueAtTime(0.1, startTime);
     crackleGain.gain.exponentialRampToValueAtTime(0.001, startTime + crackleLen);
-    crackle.connect(crackleFilt); crackleFilt.connect(crackleGain); crackleGain.connect(masterGain);
+    crackle.connect(crackleBp); crackleBp.connect(crackleGain); crackleGain.connect(masterGain);
     crackle.start(startTime); crackle.stop(startTime + crackleLen + 0.01);
   });
 }
