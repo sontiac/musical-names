@@ -150,6 +150,51 @@ function JazzRing({ ring }: { ring: Ring }) {
   );
 }
 
+function FireRing({ ring }: { ring: Ring }) {
+  // Teardrop / flame shapes that shoot upward
+  return (
+    <motion.div
+      className="absolute"
+      style={{
+        background: `radial-gradient(ellipse at 50% 80%, ${ring.color} 0%, ${ring.color}00 70%)`,
+        borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+      }}
+      initial={{ width: 20, height: 30, opacity: 1, y: 0 }}
+      animate={{
+        width: [20, 60 + ring.index * 8],
+        height: [30, 120 + ring.index * 15],
+        opacity: [1, 0],
+        y: [0, -200 - ring.index * 20],
+        scaleX: [1, 0.6],
+      }}
+      transition={{ duration: 1.2, ease: 'easeOut' }}
+      exit={{ opacity: 0 }}
+    />
+  );
+}
+
+function LoveRing({ ring }: { ring: Ring }) {
+  // Soft glowing circles — like petals drifting
+  return (
+    <motion.div
+      className="absolute rounded-full"
+      style={{
+        background: `radial-gradient(circle, ${ring.color}60 0%, ${ring.color}00 70%)`,
+        boxShadow: `0 0 40px ${ring.color}40`,
+        filter: 'blur(3px)',
+      }}
+      initial={{ width: 30, height: 30, opacity: 0.8 }}
+      animate={{
+        width: [30, 250 + ring.index * 25],
+        height: [30, 250 + ring.index * 25],
+        opacity: [0.8, 0],
+      }}
+      transition={{ duration: 2.5, ease: 'easeOut' }}
+      exit={{ opacity: 0 }}
+    />
+  );
+}
+
 const RING_COMPONENTS: Record<SoundMode, React.ComponentType<{ ring: Ring }>> = {
   ethereal: EtherealRing,
   piano: PianoRing,
@@ -157,6 +202,8 @@ const RING_COMPONENTS: Record<SoundMode, React.ComponentType<{ ring: Ring }>> = 
   '8bit': BitRing,
   crystal: CrystalRing,
   jazz: JazzRing,
+  fire: FireRing,
+  love: LoveRing,
 };
 
 // ── Per-mode ambient glow ──
@@ -173,6 +220,10 @@ function getAmbientStyle(mode: SoundMode, baseColor: string) {
       return { background: `radial-gradient(circle, ${baseColor}15 0%, transparent 60%)` };
     case 'jazz':
       return { background: `radial-gradient(circle, ${baseColor}12 0%, transparent 65%)` };
+    case 'fire':
+      return { background: `radial-gradient(ellipse 50% 70% at 50% 60%, ${baseColor}18 0%, transparent 70%)` };
+    case 'love':
+      return { background: `radial-gradient(circle, ${baseColor}20 0%, transparent 75%)` };
     default:
       return { background: `radial-gradient(circle, ${baseColor}15 0%, transparent 70%)` };
   }

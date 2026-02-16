@@ -1,4 +1,4 @@
-export type SoundMode = 'ethereal' | 'piano' | 'ocean' | '8bit' | 'crystal' | 'jazz';
+export type SoundMode = 'ethereal' | 'piano' | 'ocean' | '8bit' | 'crystal' | 'jazz' | 'fire' | 'love';
 
 export const MODES: { id: SoundMode; label: string; dot: string }[] = [
   { id: 'ethereal', label: 'Ethereal', dot: '#BB8FCE' },
@@ -7,6 +7,8 @@ export const MODES: { id: SoundMode; label: string; dot: string }[] = [
   { id: '8bit', label: '8-Bit', dot: '#39FF14' },
   { id: 'crystal', label: 'Crystal', dot: '#E0E7FF' },
   { id: 'jazz', label: 'Jazz', dot: '#E59866' },
+  { id: 'fire', label: 'Fire', dot: '#FF4500' },
+  { id: 'love', label: 'Love', dot: '#FF69B4' },
 ];
 
 // ── Scales ──
@@ -63,6 +65,20 @@ const SCALES: Record<SoundMode, number[]> = {
     261.63,311.13,349.23,392.0,466.16,
     523.25,
   ],
+  // Phrygian dominant: C,Db,E,F,G,Ab,Bb — flamenco/Spanish gypsy
+  fire: [
+    261.63,277.18,329.63,349.23,392.0,415.3,466.16,
+    523.25,554.37,659.25,698.46,783.99,830.61,932.33,
+    1046.5,1108.73,1318.51,1396.91,1567.98,1661.22,1864.66,
+    261.63,329.63,392.0,523.25,659.25,
+  ],
+  // Lydian: C,D,E,F#,G,A,B — dreamy, floating, magical
+  love: [
+    261.63,293.66,329.63,369.99,392.0,440.0,493.88,
+    523.25,587.33,659.25,739.99,783.99,880.0,987.77,
+    261.63,293.66,329.63,369.99,392.0,440.0,493.88,
+    523.25,587.33,659.25,739.99,783.99,
+  ],
 };
 
 // ── Color palettes per mode ──
@@ -103,6 +119,18 @@ const MODE_COLORS: Record<SoundMode, string[]> = {
     '#A67B5B','#6F4E37','#C4A882','#B8860B','#DAA520','#BC8F8F','#F4A460','#E8D5B7',
     '#9B7653','#7B5B3A','#C9B99A','#A08060','#D2B48C','#C19A6B','#E6BE8A','#996515',
     '#BDB76B','#C8AD7F',
+  ],
+  fire: [
+    '#FF0000','#FF4500','#FF6B00','#FF8C00','#FFA500','#FFD700','#FF4500','#FF0000',
+    '#FF6347','#FF7F50','#FF8C00','#FFB347','#FF4500','#FF0000','#FF6B00','#FFA500',
+    '#FFCC00','#FF3300','#FF5722','#FF6E40','#FF9100','#FFD740','#FF1744','#FF3D00',
+    '#FFAB00','#FFE0B2',
+  ],
+  love: [
+    '#FF69B4','#FF1493','#FFB6C1','#FFC0CB','#FF85A2','#E91E63','#F48FB1','#F06292',
+    '#EC407A','#D81B60','#FCE4EC','#F8BBD0','#F48FB1','#F06292','#FF80AB','#FF4081',
+    '#FFB3D9','#FF69B4','#E91E63','#C2185B','#FF8A80','#FF5252','#FF1744','#F50057',
+    '#FF80AB','#FFD1DC',
   ],
 };
 
@@ -391,6 +419,106 @@ function playJazz(ctx: AudioContext, masterGain: GainNode, letters: string[], on
   });
 }
 
+function playFire(ctx: AudioContext, masterGain: GainNode, letters: string[], onsetInterval: number, now: number, callbacks: PlaybackCallbacks) {
+  // Short bright reverb — close and intense
+  const convolver = ctx.createConvolver();
+  convolver.buffer = createReverbImpulse(ctx, 0.8, 5);
+  const dryGain = ctx.createGain(); dryGain.gain.value = 0.85;
+  const wetGain = ctx.createGain(); wetGain.gain.value = 0.15;
+  masterGain.connect(dryGain); masterGain.connect(convolver); convolver.connect(wetGain);
+  dryGain.connect(ctx.destination); wetGain.connect(ctx.destination);
+
+  const scale = SCALES.fire;
+  letters.forEach((letter, i) => {
+    const idx = letter.charCodeAt(0) - 97;
+    if (idx < 0 || idx > 25) return;
+    const freq = scale[idx];
+    const startTime = now + i * onsetInterval;
+    setTimeout(() => callbacks.onLetterStart(i, letter), Math.max(0, (startTime - ctx.currentTime) * 1000));
+
+    const noteDur = onsetInterval * 0.85;
+
+    // Main sawtooth with resonant filter sweep (opens on attack)
+    const osc = ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.value = freq;
+    const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.Q.value = 8;
+    // Filter sweep: starts high (bright attack), sweeps down (darkens)
+    filt.frequency.setValueAtTime(6000, startTime);
+    filt.frequency.exponentialRampToValueAtTime(800, startTime + noteDur * 0.7);
+
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, startTime);
+    g.gain.linearRampToValueAtTime(0.6, startTime + 0.003); // very fast attack
+    g.gain.linearRampToValueAtTime(0.4, startTime + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.01, startTime + noteDur);
+
+    osc.connect(filt); filt.connect(g); g.connect(masterGain);
+    osc.start(startTime); osc.stop(startTime + noteDur + 0.05);
+
+    // Noise burst on attack — crackle/spark
+    const crackleLen = 0.04;
+    const crackleBuffer = ctx.createBuffer(1, ctx.sampleRate * crackleLen, ctx.sampleRate);
+    const crackleData = crackleBuffer.getChannelData(0);
+    for (let j = 0; j < crackleData.length; j++) crackleData[j] = Math.random() * 2 - 1;
+    const crackle = ctx.createBufferSource(); crackle.buffer = crackleBuffer;
+    const crackleFilt = ctx.createBiquadFilter(); crackleFilt.type = 'highpass'; crackleFilt.frequency.value = 2000;
+    const crackleGain = ctx.createGain();
+    crackleGain.gain.setValueAtTime(0.25, startTime);
+    crackleGain.gain.exponentialRampToValueAtTime(0.001, startTime + crackleLen);
+    crackle.connect(crackleFilt); crackleFilt.connect(crackleGain); crackleGain.connect(masterGain);
+    crackle.start(startTime); crackle.stop(startTime + crackleLen + 0.01);
+  });
+}
+
+function playLove(ctx: AudioContext, masterGain: GainNode, letters: string[], onsetInterval: number, now: number, callbacks: PlaybackCallbacks) {
+  // Warm medium-large reverb with echo trails
+  const convolver = ctx.createConvolver();
+  convolver.buffer = createReverbImpulse(ctx, 2.5, 2.5);
+  const dryGain = ctx.createGain(); dryGain.gain.value = 0.5;
+  const wetGain = ctx.createGain(); wetGain.gain.value = 0.5;
+  // Echo delay with high feedback for trailing echoes
+  const delay = ctx.createDelay(1); delay.delayTime.value = 0.25;
+  const delayFb = ctx.createGain(); delayFb.gain.value = 0.35;
+  const delayWet = ctx.createGain(); delayWet.gain.value = 0.2;
+  masterGain.connect(dryGain); masterGain.connect(convolver); convolver.connect(wetGain);
+  masterGain.connect(delay); delay.connect(delayFb); delayFb.connect(delay); delay.connect(delayWet);
+  dryGain.connect(ctx.destination); wetGain.connect(ctx.destination); delayWet.connect(ctx.destination);
+
+  const scale = SCALES.love;
+  letters.forEach((letter, i) => {
+    const idx = letter.charCodeAt(0) - 97;
+    if (idx < 0 || idx > 25) return;
+    const freq = scale[idx];
+    const startTime = now + i * onsetInterval;
+    setTimeout(() => callbacks.onLetterStart(i, letter), Math.max(0, (startTime - ctx.currentTime) * 1000));
+
+    // Legato — long, overlapping, breathing
+    const noteDur = onsetInterval * 2.0;
+
+    // Two slightly detuned sines for natural chorus shimmer
+    [-3, 3].forEach((detuneCents) => {
+      const osc = ctx.createOscillator(); osc.type = 'sine';
+      osc.frequency.value = freq;
+      osc.detune.value = detuneCents;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, startTime);
+      g.gain.linearRampToValueAtTime(0.4, startTime + 0.08); // slow gentle attack
+      g.gain.linearRampToValueAtTime(0.3, startTime + noteDur * 0.5);
+      g.gain.linearRampToValueAtTime(0, startTime + noteDur); // very long release
+      osc.connect(g); g.connect(masterGain);
+      osc.start(startTime); osc.stop(startTime + noteDur + 0.1);
+    });
+
+    // Subtle octave-up harmonic for sparkle
+    const harmonic = ctx.createOscillator(); harmonic.type = 'sine'; harmonic.frequency.value = freq * 2;
+    const hg = ctx.createGain();
+    hg.gain.setValueAtTime(0, startTime);
+    hg.gain.linearRampToValueAtTime(0.08, startTime + 0.12);
+    hg.gain.linearRampToValueAtTime(0, startTime + noteDur * 0.8);
+    harmonic.connect(hg); hg.connect(masterGain);
+    harmonic.start(startTime); harmonic.stop(startTime + noteDur + 0.1);
+  });
+}
+
 export function playName(name: string, mode: SoundMode, callbacks: PlaybackCallbacks): void {
   const ctx = getAudioContext();
   if (ctx.state === 'suspended') ctx.resume();
@@ -413,12 +541,13 @@ export function playName(name: string, mode: SoundMode, callbacks: PlaybackCallb
     '8bit': () => play8Bit(ctx, masterGain, letters, onsetInterval, now, callbacks),
     crystal: () => playCrystal(ctx, masterGain, letters, onsetInterval, now, callbacks),
     jazz: () => playJazz(ctx, masterGain, letters, onsetInterval, now, callbacks),
+    fire: () => playFire(ctx, masterGain, letters, onsetInterval, now, callbacks),
+    love: () => playLove(ctx, masterGain, letters, onsetInterval, now, callbacks),
   };
 
   modePlayer[mode]();
 
-  // Jazz has swing timing that extends beyond simple interval calc
-  const tailDuration = mode === 'ocean' ? 1.5 : mode === 'crystal' ? 1.2 : 0.8;
+  const tailDuration = mode === 'ocean' ? 1.5 : mode === 'crystal' ? 1.2 : mode === 'love' ? 1.5 : mode === 'fire' ? 0.6 : 0.8;
   const totalTime = totalDuration + tailDuration;
   const msUntilComplete = (now + totalTime - ctx.currentTime) * 1000;
   setTimeout(() => callbacks.onComplete(), Math.max(0, msUntilComplete));
