@@ -2,25 +2,27 @@ import type { Metadata } from 'next';
 import NamePlayer from '@/components/NamePlayer';
 
 interface Props {
-  searchParams: Promise<{ name?: string }>;
+  searchParams: Promise<{ name?: string; mode?: string }>;
 }
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const params = await searchParams;
   const name = params.name;
+  const mode = params.mode;
 
   if (name) {
+    const modeLabel = mode ? ` in ${mode} mode` : '';
     return {
       title: `Hear what ${name} sounds like`,
-      description: `${name} has a unique melody. Type any name and hear its sound.`,
+      description: `${name} has a unique melody${modeLabel}. Type any name and hear its sound.`,
       openGraph: {
         title: `Hear what ${name} sounds like`,
-        description: `${name} has a unique melody. Type any name and hear its sound.`,
+        description: `${name} has a unique melody${modeLabel}. Type any name and hear its sound.`,
       },
       twitter: {
         card: 'summary_large_image',
         title: `Hear what ${name} sounds like`,
-        description: `${name} has a unique melody. Type any name and hear its sound.`,
+        description: `${name} has a unique melody${modeLabel}. Type any name and hear its sound.`,
       },
     };
   }

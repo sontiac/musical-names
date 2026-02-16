@@ -1,90 +1,114 @@
-// Pentatonic scale notes (C, D, E, G, A) across octaves
-// These can't sound bad together — any combination is pleasant
-const PENTATONIC_NOTES: number[] = [
-  // Octave 3
-  130.81, // C3
-  146.83, // D3
-  164.81, // E3
-  196.0,  // G3
-  220.0,  // A3
-  // Octave 4
-  261.63, // C4
-  293.66, // D4
-  329.63, // E4
-  392.0,  // G4
-  440.0,  // A4
-  // Octave 5
-  523.25, // C5
-  587.33, // D5
-  659.25, // E5
-  783.99, // G5
-  880.0,  // A5
-  // Octave 6 (partial — only need 11 more to reach 26)
-  1046.5, // C6
-  1174.66,// D6
-  1318.51,// E6
-  1567.98,// G6
-  1760.0, // A6
-  // Octave 2 (lower register for depth)
-  65.41,  // C2
-  73.42,  // D2
-  82.41,  // E2
-  98.0,   // G2
-  110.0,  // A2
-  // One more
-  523.25, // C5 repeat
+export type SoundMode = 'ethereal' | 'piano' | 'ocean' | '8bit' | 'crystal' | 'jazz';
+
+export const MODES: { id: SoundMode; label: string; dot: string }[] = [
+  { id: 'ethereal', label: 'Ethereal', dot: '#BB8FCE' },
+  { id: 'piano', label: 'Piano', dot: '#F7DC6F' },
+  { id: 'ocean', label: 'Ocean', dot: '#45B7D1' },
+  { id: '8bit', label: '8-Bit', dot: '#39FF14' },
+  { id: 'crystal', label: 'Crystal', dot: '#E0E7FF' },
+  { id: 'jazz', label: 'Jazz', dot: '#E59866' },
 ];
+
+// ── Scales ──
+
+const SCALES: Record<SoundMode, number[]> = {
+  // Pentatonic C,D,E,G,A across octaves 2-6
+  ethereal: [
+    130.81,146.83,164.81,196.0,220.0,
+    261.63,293.66,329.63,392.0,440.0,
+    523.25,587.33,659.25,783.99,880.0,
+    1046.5,1174.66,1318.51,1567.98,1760.0,
+    65.41,73.42,82.41,98.0,110.0,
+    523.25,
+  ],
+  // C major across 2 octaves (C,D,E,F,G,A,B) — 14 notes, cycle for 26
+  piano: [
+    261.63,293.66,329.63,349.23,392.0,440.0,493.88,
+    523.25,587.33,659.25,698.46,783.99,880.0,987.77,
+    261.63,293.66,329.63,349.23,392.0,440.0,493.88,
+    523.25,587.33,659.25,698.46,783.99,
+  ],
+  // Whole tone: C,D,E,F#,G#,A# across octaves
+  ocean: [
+    130.81,146.83,164.81,185.0,207.65,233.08,
+    261.63,293.66,329.63,369.99,415.3,466.16,
+    523.25,587.33,659.25,739.99,830.61,932.33,
+    1046.5,1174.66,1318.51,1479.98,1661.22,1864.66,
+    261.63,293.66,
+  ],
+  // Pentatonic one octave higher than ethereal
+  '8bit': [
+    523.25,587.33,659.25,783.99,880.0,
+    1046.5,1174.66,1318.51,1567.98,1760.0,
+    2093.0,2349.32,2637.02,3135.96,3520.0,
+    523.25,587.33,659.25,783.99,880.0,
+    1046.5,1174.66,1318.51,1567.98,1760.0,
+    2093.0,
+  ],
+  // Major pentatonic C5-C7
+  crystal: [
+    523.25,587.33,659.25,783.99,880.0,
+    1046.5,1174.66,1318.51,1567.98,1760.0,
+    2093.0,2349.32,2637.02,3135.96,3520.0,
+    523.25,659.25,783.99,1046.5,1318.51,
+    1567.98,2093.0,2637.02,3135.96,880.0,
+    1760.0,
+  ],
+  // Minor pentatonic: C,Eb,F,G,Bb
+  jazz: [
+    130.81,155.56,174.61,196.0,233.08,
+    261.63,311.13,349.23,392.0,466.16,
+    523.25,622.25,698.46,783.99,932.33,
+    1046.5,1244.51,1396.91,1567.98,1864.66,
+    261.63,311.13,349.23,392.0,466.16,
+    523.25,
+  ],
+};
+
+// ── Color palettes per mode ──
+
+const MODE_COLORS: Record<SoundMode, string[]> = {
+  ethereal: [
+    '#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD','#98D8C8','#F7DC6F',
+    '#BB8FCE','#85C1E9','#F8C471','#82E0AA','#F1948A','#85929E','#F0B27A','#AED6F1',
+    '#A3E4D7','#E59866','#C39BD3','#7FB3D8','#F9E79F','#A2D9CE','#D7BDE2','#F5B7B1',
+    '#AEB6BF','#A9DFBF',
+  ],
+  piano: [
+    '#FFF8E1','#FFE0B2','#FFCC80','#FFB74D','#FFA726','#FF9800','#FB8C00','#F57C00',
+    '#EF6C00','#E65100','#FFF3E0','#FFE0B2','#FFCC80','#FFB74D','#FFA726','#FF9800',
+    '#FFFDE7','#FFF9C4','#FFF176','#FFEE58','#FFEB3B','#FDD835','#F9A825','#F57F17',
+    '#FFD54F','#FFE082',
+  ],
+  ocean: [
+    '#E0F7FA','#B2EBF2','#80DEEA','#4DD0E1','#26C6DA','#00BCD4','#00ACC1','#0097A7',
+    '#00838F','#006064','#E0F2F1','#B2DFDB','#80CBC4','#4DB6AC','#26A69A','#009688',
+    '#00897B','#00796B','#004D40','#1DE9B6','#64FFDA','#A7FFEB','#84FFFF','#18FFFF',
+    '#00E5FF','#00B8D4',
+  ],
+  '8bit': [
+    '#FF00FF','#00FFFF','#39FF14','#FFFF00','#FF6EC7','#00FF00','#FF4500','#7DF9FF',
+    '#FF1493','#ADFF2F','#FF69B4','#00CED1','#FFD700','#FF00FF','#00FF7F','#FF6347',
+    '#E0FF00','#FF3F8E','#00BFFF','#FF4444','#77FF00','#FF9F00','#4DEEEA','#F000FF',
+    '#74EE15','#FFE700',
+  ],
+  crystal: [
+    '#E8EAF6','#C5CAE9','#9FA8DA','#7986CB','#5C6BC0','#E0E7FF','#C7D2FE','#A5B4FC',
+    '#818CF8','#6366F1','#F0F4FF','#DBEAFE','#BFDBFE','#93C5FD','#60A5FA','#E0E7FF',
+    '#F5F3FF','#EDE9FE','#DDD6FE','#C4B5FD','#A78BFA','#8B5CF6','#7C3AED','#6D28D9',
+    '#D1D5DB','#E5E7EB',
+  ],
+  jazz: [
+    '#D4A574','#C68642','#8B6914','#A0522D','#CD853F','#DEB887','#D2691E','#8B4513',
+    '#A67B5B','#6F4E37','#C4A882','#B8860B','#DAA520','#BC8F8F','#F4A460','#E8D5B7',
+    '#9B7653','#7B5B3A','#C9B99A','#A08060','#D2B48C','#C19A6B','#E6BE8A','#996515',
+    '#BDB76B','#C8AD7F',
+  ],
+};
 
 const VOWELS = new Set(['a', 'e', 'i', 'o', 'u']);
 
 type OscType = OscillatorType;
-
-interface LetterSound {
-  frequency: number;
-  type: OscType;
-  attack: number;
-  decay: number;
-  sustain: number;
-  release: number;
-  isVowel: boolean;
-}
-
-// Deterministic mapping: letter index -> sound properties
-function getLetterSound(letter: string): LetterSound {
-  const idx = letter.toLowerCase().charCodeAt(0) - 97;
-  if (idx < 0 || idx > 25) {
-    return { frequency: 440, type: 'sine', attack: 0.01, decay: 0.1, sustain: 0.3, release: 0.1, isVowel: false };
-  }
-
-  const frequency = PENTATONIC_NOTES[idx];
-  const isVowel = VOWELS.has(letter.toLowerCase());
-
-  // Vowels: warm sine waves, longer envelope
-  // Consonants: varied timbres, shorter and more percussive
-  let type: OscType;
-  let attack: number;
-  let decay: number;
-  let sustain: number;
-  let release: number;
-
-  if (isVowel) {
-    type = 'sine';
-    attack = 0.05;
-    decay = 0.15;
-    sustain = 0.6;
-    release = 0.2;
-  } else {
-    // Cycle through timbres for consonants
-    const consonantTimbres: OscType[] = ['triangle', 'triangle', 'sawtooth', 'square'];
-    type = consonantTimbres[idx % consonantTimbres.length];
-    attack = 0.005;
-    decay = 0.08;
-    sustain = 0.2;
-    release = 0.08;
-  }
-
-  return { frequency, type, attack, decay, sustain, release, isVowel };
-}
 
 let audioCtx: AudioContext | null = null;
 
@@ -95,12 +119,10 @@ function getAudioContext(): AudioContext {
   return audioCtx;
 }
 
-// Create reverb impulse response
 function createReverbImpulse(ctx: AudioContext, duration: number, decay: number): AudioBuffer {
   const sampleRate = ctx.sampleRate;
   const length = sampleRate * duration;
   const impulse = ctx.createBuffer(2, length, sampleRate);
-
   for (let channel = 0; channel < 2; channel++) {
     const channelData = impulse.getChannelData(channel);
     for (let i = 0; i < length; i++) {
@@ -115,153 +137,289 @@ export interface PlaybackCallbacks {
   onComplete: () => void;
 }
 
-export function playName(name: string, callbacks: PlaybackCallbacks): void {
+export function getLetterColor(letter: string, mode: SoundMode = 'ethereal'): string {
+  const idx = letter.toLowerCase().charCodeAt(0) - 97;
+  if (idx < 0 || idx > 25) return '#ffffff';
+  return MODE_COLORS[mode][idx];
+}
+
+// ── Per-mode synth logic ──
+
+function playEthereal(ctx: AudioContext, masterGain: GainNode, letters: string[], onsetInterval: number, now: number, callbacks: PlaybackCallbacks) {
+  // Reverb + delay
+  const convolver = ctx.createConvolver();
+  convolver.buffer = createReverbImpulse(ctx, 2, 3);
+  const dryGain = ctx.createGain(); dryGain.gain.value = 0.7;
+  const wetGain = ctx.createGain(); wetGain.gain.value = 0.3;
+  const delay = ctx.createDelay(1); delay.delayTime.value = 0.15;
+  const delayFb = ctx.createGain(); delayFb.gain.value = 0.2;
+  const delayWet = ctx.createGain(); delayWet.gain.value = 0.15;
+  masterGain.connect(dryGain); masterGain.connect(convolver); convolver.connect(wetGain);
+  masterGain.connect(delay); delay.connect(delayFb); delayFb.connect(delay); delay.connect(delayWet);
+  dryGain.connect(ctx.destination); wetGain.connect(ctx.destination); delayWet.connect(ctx.destination);
+
+  const scale = SCALES.ethereal;
+  letters.forEach((letter, i) => {
+    const idx = letter.charCodeAt(0) - 97;
+    if (idx < 0 || idx > 25) return;
+    const freq = scale[idx];
+    const isVowel = VOWELS.has(letter);
+    const startTime = now + i * onsetInterval;
+    setTimeout(() => callbacks.onLetterStart(i, letter), Math.max(0, (startTime - ctx.currentTime) * 1000));
+
+    const type: OscType = isVowel ? 'sine' : (['triangle','triangle','sawtooth','square'] as OscType[])[idx % 4];
+    const attack = isVowel ? 0.05 : 0.005;
+    const decay = isVowel ? 0.15 : 0.08;
+    const sustain = isVowel ? 0.6 : 0.2;
+    const release = isVowel ? 0.2 : 0.08;
+    const noteDur = isVowel ? onsetInterval * 1.5 : onsetInterval * 0.9;
+    const peak = isVowel ? 0.8 : 0.5;
+
+    const osc = ctx.createOscillator(); osc.type = type;
+    osc.frequency.value = (type === 'sawtooth' || type === 'square') ? freq * 0.995 : freq;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, startTime);
+    g.gain.linearRampToValueAtTime(peak, startTime + attack);
+    g.gain.linearRampToValueAtTime(peak * sustain, startTime + attack + decay);
+    g.gain.setValueAtTime(peak * sustain, startTime + noteDur - release);
+    g.gain.linearRampToValueAtTime(0, startTime + noteDur);
+    const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = isVowel ? 2000 : 3000; filt.Q.value = 0.5;
+    osc.connect(filt); filt.connect(g); g.connect(masterGain);
+    osc.start(startTime); osc.stop(startTime + noteDur + 0.1);
+
+    if (isVowel) {
+      const h = ctx.createOscillator(); h.type = 'sine'; h.frequency.value = freq * 2;
+      const hg = ctx.createGain();
+      hg.gain.setValueAtTime(0, startTime);
+      hg.gain.linearRampToValueAtTime(peak * 0.15, startTime + attack * 1.5);
+      hg.gain.linearRampToValueAtTime(0, startTime + noteDur);
+      h.connect(hg); hg.connect(masterGain); h.start(startTime); h.stop(startTime + noteDur + 0.1);
+    }
+  });
+}
+
+function playPiano(ctx: AudioContext, masterGain: GainNode, letters: string[], onsetInterval: number, now: number, callbacks: PlaybackCallbacks) {
+  // Light reverb for room feel
+  const convolver = ctx.createConvolver();
+  convolver.buffer = createReverbImpulse(ctx, 1.5, 4);
+  const dryGain = ctx.createGain(); dryGain.gain.value = 0.8;
+  const wetGain = ctx.createGain(); wetGain.gain.value = 0.2;
+  masterGain.connect(dryGain); masterGain.connect(convolver); convolver.connect(wetGain);
+  dryGain.connect(ctx.destination); wetGain.connect(ctx.destination);
+
+  const scale = SCALES.piano;
+  letters.forEach((letter, i) => {
+    const idx = letter.charCodeAt(0) - 97;
+    if (idx < 0 || idx > 25) return;
+    const freq = scale[idx];
+    const startTime = now + i * onsetInterval;
+    setTimeout(() => callbacks.onLetterStart(i, letter), Math.max(0, (startTime - ctx.currentTime) * 1000));
+
+    const noteDur = onsetInterval * 1.2;
+    // Piano: fundamental + harmonics
+    [1, 2, 3].forEach((harmonic) => {
+      const osc = ctx.createOscillator(); osc.type = 'sine';
+      osc.frequency.value = freq * harmonic;
+      const g = ctx.createGain();
+      const vol = harmonic === 1 ? 0.7 : harmonic === 2 ? 0.2 : 0.08;
+      g.gain.setValueAtTime(0, startTime);
+      g.gain.linearRampToValueAtTime(vol, startTime + 0.005); // sharp attack
+      g.gain.exponentialRampToValueAtTime(vol * 0.3, startTime + 0.8); // moderate decay
+      g.gain.exponentialRampToValueAtTime(0.001, startTime + noteDur + 1.5); // long release
+      osc.connect(g); g.connect(masterGain);
+      osc.start(startTime); osc.stop(startTime + noteDur + 1.6);
+    });
+  });
+}
+
+function playOcean(ctx: AudioContext, masterGain: GainNode, letters: string[], onsetInterval: number, now: number, callbacks: PlaybackCallbacks) {
+  // Heavy reverb — oceanic space
+  const convolver = ctx.createConvolver();
+  convolver.buffer = createReverbImpulse(ctx, 3, 2);
+  const dryGain = ctx.createGain(); dryGain.gain.value = 0.5;
+  const wetGain = ctx.createGain(); wetGain.gain.value = 0.5;
+  masterGain.connect(dryGain); masterGain.connect(convolver); convolver.connect(wetGain);
+  dryGain.connect(ctx.destination); wetGain.connect(ctx.destination);
+
+  const scale = SCALES.ocean;
+  letters.forEach((letter, i) => {
+    const idx = letter.charCodeAt(0) - 97;
+    if (idx < 0 || idx > 25) return;
+    const freq = scale[idx];
+    const startTime = now + i * onsetInterval;
+    setTimeout(() => callbacks.onLetterStart(i, letter), Math.max(0, (startTime - ctx.currentTime) * 1000));
+
+    // Legato — notes are longer, overlap significantly
+    const noteDur = onsetInterval * 2.5;
+
+    // Main tone: slow fade-in sine
+    const osc = ctx.createOscillator(); osc.type = 'sine'; osc.frequency.value = freq;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, startTime);
+    g.gain.linearRampToValueAtTime(0.6, startTime + 0.1); // slow attack
+    g.gain.linearRampToValueAtTime(0.3, startTime + noteDur * 0.6);
+    g.gain.linearRampToValueAtTime(0, startTime + noteDur); // long release
+    osc.connect(g); g.connect(masterGain);
+    osc.start(startTime); osc.stop(startTime + noteDur + 0.1);
+
+    // Filtered noise wash
+    const bufferSize = ctx.sampleRate * noteDur;
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const noiseData = noiseBuffer.getChannelData(0);
+    for (let j = 0; j < bufferSize; j++) noiseData[j] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource(); noise.buffer = noiseBuffer;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = 5;
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(0, startTime);
+    ng.gain.linearRampToValueAtTime(0.08, startTime + 0.15);
+    ng.gain.linearRampToValueAtTime(0, startTime + noteDur);
+    noise.connect(bp); bp.connect(ng); ng.connect(masterGain);
+    noise.start(startTime); noise.stop(startTime + noteDur + 0.1);
+  });
+}
+
+function play8Bit(ctx: AudioContext, masterGain: GainNode, letters: string[], onsetInterval: number, now: number, callbacks: PlaybackCallbacks) {
+  // Minimal reverb — dry and punchy
+  const dryGain = ctx.createGain(); dryGain.gain.value = 0.95;
+  const convolver = ctx.createConvolver();
+  convolver.buffer = createReverbImpulse(ctx, 0.3, 8);
+  const wetGain = ctx.createGain(); wetGain.gain.value = 0.05;
+  masterGain.connect(dryGain); masterGain.connect(convolver); convolver.connect(wetGain);
+  dryGain.connect(ctx.destination); wetGain.connect(ctx.destination);
+
+  const scale = SCALES['8bit'];
+  letters.forEach((letter, i) => {
+    const idx = letter.charCodeAt(0) - 97;
+    if (idx < 0 || idx > 25) return;
+    const freq = scale[idx];
+    const startTime = now + i * onsetInterval;
+    setTimeout(() => callbacks.onLetterStart(i, letter), Math.max(0, (startTime - ctx.currentTime) * 1000));
+
+    const noteDur = onsetInterval * 0.7; // tight and snappy
+    const osc = ctx.createOscillator(); osc.type = 'square'; osc.frequency.value = freq;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, startTime);
+    g.gain.linearRampToValueAtTime(0.5, startTime + 0.001); // instant attack
+    g.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+    g.gain.linearRampToValueAtTime(0, startTime + noteDur);
+    // Low-pass to avoid harsh high-frequency square artifacts
+    const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 4000; filt.Q.value = 0.7;
+    osc.connect(filt); filt.connect(g); g.connect(masterGain);
+    osc.start(startTime); osc.stop(startTime + noteDur + 0.05);
+  });
+}
+
+function playCrystal(ctx: AudioContext, masterGain: GainNode, letters: string[], onsetInterval: number, now: number, callbacks: PlaybackCallbacks) {
+  // Heavy reverb — shimmery space
+  const convolver = ctx.createConvolver();
+  convolver.buffer = createReverbImpulse(ctx, 3, 2.5);
+  const dryGain = ctx.createGain(); dryGain.gain.value = 0.4;
+  const wetGain = ctx.createGain(); wetGain.gain.value = 0.6;
+  // Chorus via short delay with modulation
+  const chorusDelay = ctx.createDelay(0.1); chorusDelay.delayTime.value = 0.015;
+  const chorusGain = ctx.createGain(); chorusGain.gain.value = 0.3;
+  masterGain.connect(dryGain); masterGain.connect(convolver); convolver.connect(wetGain);
+  masterGain.connect(chorusDelay); chorusDelay.connect(chorusGain);
+  dryGain.connect(ctx.destination); wetGain.connect(ctx.destination); chorusGain.connect(ctx.destination);
+
+  const scale = SCALES.crystal;
+  letters.forEach((letter, i) => {
+    const idx = letter.charCodeAt(0) - 97;
+    if (idx < 0 || idx > 25) return;
+    const freq = scale[idx];
+    const startTime = now + i * onsetInterval;
+    setTimeout(() => callbacks.onLetterStart(i, letter), Math.max(0, (startTime - ctx.currentTime) * 1000));
+
+    const noteDur = onsetInterval * 0.8;
+    // Quick sine/triangle tap
+    const type: OscType = idx % 2 === 0 ? 'sine' : 'triangle';
+    const osc = ctx.createOscillator(); osc.type = type; osc.frequency.value = freq;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, startTime);
+    g.gain.linearRampToValueAtTime(0.6, startTime + 0.002); // very short attack
+    g.gain.exponentialRampToValueAtTime(0.15, startTime + 0.1); // quick decay
+    g.gain.exponentialRampToValueAtTime(0.001, startTime + noteDur + 1.0); // long release — reverb does the rest
+    osc.connect(g); g.connect(masterGain);
+    osc.start(startTime); osc.stop(startTime + noteDur + 1.1);
+  });
+}
+
+function playJazz(ctx: AudioContext, masterGain: GainNode, letters: string[], onsetInterval: number, now: number, callbacks: PlaybackCallbacks) {
+  // Warm room reverb
+  const convolver = ctx.createConvolver();
+  convolver.buffer = createReverbImpulse(ctx, 2, 3.5);
+  const dryGain = ctx.createGain(); dryGain.gain.value = 0.65;
+  const wetGain = ctx.createGain(); wetGain.gain.value = 0.35;
+  masterGain.connect(dryGain); masterGain.connect(convolver); convolver.connect(wetGain);
+  dryGain.connect(ctx.destination); wetGain.connect(ctx.destination);
+
+  const scale = SCALES.jazz;
+  letters.forEach((letter, i) => {
+    const idx = letter.charCodeAt(0) - 97;
+    if (idx < 0 || idx > 25) return;
+    const freq = scale[idx];
+
+    // Swing timing: odd notes get 60% of slot, even notes get 40%
+    let startTime: number;
+    if (i === 0) {
+      startTime = now;
+    } else {
+      const pairIndex = Math.floor(i / 2);
+      const isSecondInPair = i % 2 === 1;
+      startTime = now + pairIndex * (onsetInterval * 2) + (isSecondInPair ? onsetInterval * 1.2 : 0);
+    }
+
+    setTimeout(() => callbacks.onLetterStart(i, letter), Math.max(0, (startTime - ctx.currentTime) * 1000));
+
+    const noteDur = onsetInterval * 1.4;
+    // Soft sawtooth with low-pass
+    const osc = ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.value = freq;
+    // Subtle vibrato
+    const lfo = ctx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 5;
+    const lfoGain = ctx.createGain(); lfoGain.gain.value = freq * 0.008;
+    lfo.connect(lfoGain); lfoGain.connect(osc.frequency);
+
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, startTime);
+    g.gain.linearRampToValueAtTime(0.5, startTime + 0.02); // medium attack
+    g.gain.linearRampToValueAtTime(0.35, startTime + noteDur * 0.5);
+    g.gain.linearRampToValueAtTime(0, startTime + noteDur);
+    const filt = ctx.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 1200; filt.Q.value = 1;
+    osc.connect(filt); filt.connect(g); g.connect(masterGain);
+    osc.start(startTime); osc.stop(startTime + noteDur + 0.1);
+    lfo.start(startTime); lfo.stop(startTime + noteDur + 0.1);
+  });
+}
+
+export function playName(name: string, mode: SoundMode, callbacks: PlaybackCallbacks): void {
   const ctx = getAudioContext();
-  if (ctx.state === 'suspended') {
-    ctx.resume();
-  }
+  if (ctx.state === 'suspended') ctx.resume();
 
   const letters = name.toLowerCase().replace(/[^a-z]/g, '').split('');
   if (letters.length === 0) return;
 
-  // Target total duration: 1-3 seconds based on name length
-  // Short names (1-3 letters): ~1s, long names (10+): ~3s
   const totalDuration = Math.min(3, Math.max(1, letters.length * 0.2));
   const onsetInterval = totalDuration / letters.length;
 
-  // Master gain
   const masterGain = ctx.createGain();
   masterGain.gain.value = 0.3;
 
-  // Reverb
-  const convolver = ctx.createConvolver();
-  convolver.buffer = createReverbImpulse(ctx, 2, 3);
-
-  // Dry/wet mix
-  const dryGain = ctx.createGain();
-  dryGain.gain.value = 0.7;
-  const wetGain = ctx.createGain();
-  wetGain.gain.value = 0.3;
-
-  // Delay for depth
-  const delay = ctx.createDelay(1);
-  delay.delayTime.value = 0.15;
-  const delayFeedback = ctx.createGain();
-  delayFeedback.gain.value = 0.2;
-  const delayWet = ctx.createGain();
-  delayWet.gain.value = 0.15;
-
-  // Routing: master -> dry + reverb + delay -> destination
-  masterGain.connect(dryGain);
-  masterGain.connect(convolver);
-  convolver.connect(wetGain);
-  masterGain.connect(delay);
-  delay.connect(delayFeedback);
-  delayFeedback.connect(delay);
-  delay.connect(delayWet);
-
-  dryGain.connect(ctx.destination);
-  wetGain.connect(ctx.destination);
-  delayWet.connect(ctx.destination);
-
   const now = ctx.currentTime + 0.05;
 
-  letters.forEach((letter, i) => {
-    const sound = getLetterSound(letter);
-    const startTime = now + i * onsetInterval;
+  const modePlayer: Record<SoundMode, () => void> = {
+    ethereal: () => playEthereal(ctx, masterGain, letters, onsetInterval, now, callbacks),
+    piano: () => playPiano(ctx, masterGain, letters, onsetInterval, now, callbacks),
+    ocean: () => playOcean(ctx, masterGain, letters, onsetInterval, now, callbacks),
+    '8bit': () => play8Bit(ctx, masterGain, letters, onsetInterval, now, callbacks),
+    crystal: () => playCrystal(ctx, masterGain, letters, onsetInterval, now, callbacks),
+    jazz: () => playJazz(ctx, masterGain, letters, onsetInterval, now, callbacks),
+  };
 
-    // Schedule the visual callback
-    const msUntilStart = (startTime - ctx.currentTime) * 1000;
-    setTimeout(() => callbacks.onLetterStart(i, letter), Math.max(0, msUntilStart));
+  modePlayer[mode]();
 
-    // Main oscillator
-    const osc = ctx.createOscillator();
-    osc.type = sound.type;
-    osc.frequency.value = sound.frequency;
-
-    // For sawtooth/square, soften with lower volume and slight detune
-    if (sound.type === 'sawtooth' || sound.type === 'square') {
-      osc.frequency.value = sound.frequency * 0.995; // slight detune for warmth
-    }
-
-    // Gain envelope (ADSR)
-    const noteGain = ctx.createGain();
-    const noteDuration = sound.isVowel ? onsetInterval * 1.5 : onsetInterval * 0.9;
-    const peakGain = sound.isVowel ? 0.8 : 0.5;
-
-    noteGain.gain.setValueAtTime(0, startTime);
-    noteGain.gain.linearRampToValueAtTime(peakGain, startTime + sound.attack);
-    noteGain.gain.linearRampToValueAtTime(peakGain * sound.sustain, startTime + sound.attack + sound.decay);
-    noteGain.gain.setValueAtTime(peakGain * sound.sustain, startTime + noteDuration - sound.release);
-    noteGain.gain.linearRampToValueAtTime(0, startTime + noteDuration);
-
-    // Low-pass filter to soften harsh timbres
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = sound.isVowel ? 2000 : 3000;
-    filter.Q.value = 0.5;
-
-    osc.connect(filter);
-    filter.connect(noteGain);
-    noteGain.connect(masterGain);
-
-    osc.start(startTime);
-    osc.stop(startTime + noteDuration + 0.1);
-
-    // Add a subtle harmonic for vowels (octave above, very quiet)
-    if (sound.isVowel) {
-      const harmonic = ctx.createOscillator();
-      harmonic.type = 'sine';
-      harmonic.frequency.value = sound.frequency * 2;
-      const harmonicGain = ctx.createGain();
-      harmonicGain.gain.setValueAtTime(0, startTime);
-      harmonicGain.gain.linearRampToValueAtTime(peakGain * 0.15, startTime + sound.attack * 1.5);
-      harmonicGain.gain.linearRampToValueAtTime(0, startTime + noteDuration);
-      harmonic.connect(harmonicGain);
-      harmonicGain.connect(masterGain);
-      harmonic.start(startTime);
-      harmonic.stop(startTime + noteDuration + 0.1);
-    }
-  });
-
-  // Schedule completion callback
-  const totalTime = letters.length * onsetInterval + 0.8; // extra for reverb tail
+  // Jazz has swing timing that extends beyond simple interval calc
+  const tailDuration = mode === 'ocean' ? 1.5 : mode === 'crystal' ? 1.2 : 0.8;
+  const totalTime = totalDuration + tailDuration;
   const msUntilComplete = (now + totalTime - ctx.currentTime) * 1000;
   setTimeout(() => callbacks.onComplete(), Math.max(0, msUntilComplete));
-}
-
-// Letter -> color mapping (curated palette that looks good on dark bg)
-const LETTER_COLORS: string[] = [
-  '#FF6B6B', // a - warm red
-  '#4ECDC4', // b - teal
-  '#45B7D1', // c - sky blue
-  '#96CEB4', // d - sage
-  '#FFEAA7', // e - warm yellow
-  '#DDA0DD', // f - plum
-  '#98D8C8', // g - mint
-  '#F7DC6F', // h - gold
-  '#BB8FCE', // i - lavender
-  '#85C1E9', // j - light blue
-  '#F8C471', // k - peach
-  '#82E0AA', // l - green
-  '#F1948A', // m - salmon
-  '#85929E', // n - steel
-  '#F0B27A', // o - amber
-  '#AED6F1', // p - powder blue
-  '#A3E4D7', // q - aqua
-  '#E59866', // r - terra cotta
-  '#C39BD3', // s - orchid
-  '#7FB3D8', // t - cornflower
-  '#F9E79F', // u - cream gold
-  '#A2D9CE', // v - seafoam
-  '#D7BDE2', // w - wisteria
-  '#F5B7B1', // x - rose
-  '#AEB6BF', // y - silver
-  '#A9DFBF', // z - jade
-];
-
-export function getLetterColor(letter: string): string {
-  const idx = letter.toLowerCase().charCodeAt(0) - 97;
-  if (idx < 0 || idx > 25) return '#ffffff';
-  return LETTER_COLORS[idx];
 }

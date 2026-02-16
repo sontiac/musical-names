@@ -3,13 +3,18 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { playName, getLetterColor } from '@/lib/audio';
+import { playName, getLetterColor, MODES, type SoundMode } from '@/lib/audio';
 import { getRandomName } from '@/lib/names';
 import Visualizer, { type Ring } from '@/components/Visualizer';
+
+function isValidMode(m: string | null): m is SoundMode {
+  return !!m && MODES.some(mode => mode.id === m);
+}
 
 function NamePlayerInner() {
   const searchParams = useSearchParams();
   const [name, setName] = useState('');
+  const [mode, setMode] = useState<SoundMode>('ethereal');
   const [isPlaying, setIsPlaying] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [rings, setRings] = useState<Ring[]>([]);
@@ -20,10 +25,11 @@ function NamePlayerInner() {
   const [needsTap, setNeedsTap] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handlePlay = useCallback((nameToPlay: string) => {
+  const handlePlay = useCallback((nameToPlay: string, playMode?: SoundMode) => {
     if (!nameToPlay.trim() || isPlaying) return;
 
     const cleaned = nameToPlay.trim();
+    const m = playMode ?? mode;
     setDisplayName(cleaned);
     setName(cleaned);
     setIsPlaying(true);
@@ -31,10 +37,10 @@ function NamePlayerInner() {
     setRings([]);
     setActiveIndex(-1);
 
-    playName(cleaned, {
+    playName(cleaned, m, {
       onLetterStart: (index, letter) => {
         setActiveIndex(index);
-        const color = getLetterColor(letter);
+        const color = getLetterColor(letter, m);
         setRings(prev => [...prev, {
           id: `${Date.now()}-${index}`,
           letter,
@@ -45,7 +51,6 @@ function NamePlayerInner() {
       onComplete: () => {
         setIsPlaying(false);
         setIsComplete(true);
-        // Select input text so user can immediately type a new name
         setTimeout(() => {
           inputRef.current?.focus();
           inputRef.current?.select();
@@ -55,14 +60,16 @@ function NamePlayerInner() {
         }, 2000);
       },
     });
-  }, [isPlaying]);
+  }, [isPlaying, mode]);
 
   // Auto-play from URL param
   useEffect(() => {
     const urlName = searchParams.get('name');
+    const urlMode = searchParams.get('mode');
     if (urlName && !hasAutoPlayed) {
       setName(urlName);
       setDisplayName(urlName);
+      if (isValidMode(urlMode)) setMode(urlMode);
       setHasAutoPlayed(true);
       setNeedsTap(true);
     }
@@ -74,15 +81,22 @@ function NamePlayerInner() {
     handlePlay(name);
   };
 
+  const handleModeChange = (newMode: SoundMode) => {
+    setMode(newMode);
+    // If a name has been played, replay in new mode immediately
+    if (displayName && !isPlaying) {
+      handlePlay(displayName, newMode);
+    }
+  };
+
   const handleShare = () => {
-    const url = `${window.location.origin}${window.location.pathname}?name=${encodeURIComponent(displayName)}`;
+    const url = `${window.location.origin}${window.location.pathname}?name=${encodeURIComponent(displayName)}&mode=${mode}`;
     navigator.clipboard.writeText(url).then(() => {
       setShowToast(true);
       setTimeout(() => setShowToast(false), 2000);
     });
   };
 
-  // Whether we're in the initial "haven't played anything yet" state
   const isInitial = !isPlaying && !isComplete && !needsTap && !displayName;
 
   return (
@@ -93,10 +107,10 @@ function NamePlayerInner() {
         isPlaying={isPlaying}
         isComplete={isComplete}
         activeIndex={activeIndex}
+        mode={mode}
       />
 
       <AnimatePresence mode="wait">
-        {/* Tap to play fallback for shared links */}
         {needsTap && !isPlaying && !isComplete && (
           <motion.div
             key="tap"
@@ -121,10 +135,10 @@ function NamePlayerInner() {
         )}
       </AnimatePresence>
 
-      {/* Input + controls — visible when not playing and not in tap-to-play state */}
+      {/* Input + controls — visible when not playing and not in tap-to-play */}
       {!isPlaying && !needsTap && (
         <motion.div
-          className={`absolute flex flex-col items-center gap-4 ${isComplete ? 'bottom-12 sm:bottom-20' : ''}`}
+          className={`absolute flex flex-col items-center gap-4 ${isComplete ? 'bottom-12 sm:bottom-16' : ''}`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: isComplete ? 0.3 : 0 }}
@@ -146,8 +160,30 @@ function NamePlayerInner() {
               autoFocus
               className="w-72 sm:w-80 px-6 py-4 text-xl text-center bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 outline-none focus:border-white/30 focus:bg-white/[0.07] transition-all duration-300"
             />
+
+            {/* Mode selector */}
+            <div className="flex flex-wrap justify-center gap-2 max-w-sm">
+              {MODES.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => handleModeChange(m.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium tracking-wider uppercase rounded-full border transition-all duration-200 ${
+                    mode === m.id
+                      ? 'text-white/90 border-white/25 bg-white/10'
+                      : 'text-white/35 border-white/[0.06] hover:text-white/60 hover:border-white/15'
+                  }`}
+                >
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: m.dot, opacity: mode === m.id ? 1 : 0.5 }}
+                  />
+                  {m.label}
+                </button>
+              ))}
+            </div>
+
             <div className="flex items-center gap-3">
-              {/* Play / replay button */}
               <motion.button
                 type="submit"
                 disabled={!name.trim()}
@@ -160,8 +196,6 @@ function NamePlayerInner() {
                   <path d="M8 5v14l11-7z"/>
                 </svg>
               </motion.button>
-
-              {/* Random */}
               <motion.button
                 type="button"
                 onClick={() => {
@@ -175,8 +209,6 @@ function NamePlayerInner() {
               >
                 Random
               </motion.button>
-
-              {/* Share — only after a name has been played */}
               {isComplete && (
                 <motion.button
                   type="button"
@@ -195,7 +227,6 @@ function NamePlayerInner() {
         </motion.div>
       )}
 
-      {/* Toast */}
       <AnimatePresence>
         {showToast && (
           <motion.div
