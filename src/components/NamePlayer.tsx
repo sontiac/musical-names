@@ -149,7 +149,7 @@ function NamePlayerInner() {
             </h1>
           )}
 
-          <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col items-center gap-6">
             <input
               ref={inputRef}
               type="text"
@@ -158,24 +158,24 @@ function NamePlayerInner() {
               placeholder="Type a name..."
               maxLength={30}
               autoFocus
-              className="w-72 sm:w-80 px-6 py-4 text-xl text-center bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 outline-none focus:border-white/30 focus:bg-white/[0.07] transition-all duration-300"
+              className="w-80 sm:w-96 px-8 py-5 text-2xl text-center bg-white/5 border border-white/10 rounded-2xl text-white placeholder-white/30 outline-none focus:border-white/30 focus:bg-white/[0.07] transition-all duration-300"
             />
 
             {/* Mode selector */}
-            <div className="flex flex-wrap justify-center gap-2 max-w-sm">
+            <div className="flex flex-wrap justify-center gap-2.5 max-w-lg">
               {MODES.map((m) => (
                 <button
                   key={m.id}
                   type="button"
                   onClick={() => handleModeChange(m.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium tracking-wider uppercase rounded-full border transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium tracking-wider uppercase rounded-full border transition-all duration-200 ${
                     mode === m.id
                       ? 'text-white/90 border-white/25 bg-white/10'
                       : 'text-white/35 border-white/[0.06] hover:text-white/60 hover:border-white/15'
                   }`}
                 >
                   <span
-                    className="w-2 h-2 rounded-full"
+                    className="w-2.5 h-2.5 rounded-full"
                     style={{ backgroundColor: m.dot, opacity: mode === m.id ? 1 : 0.5 }}
                   />
                   {m.label}
@@ -183,16 +183,16 @@ function NamePlayerInner() {
               ))}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <motion.button
                 type="submit"
                 disabled={!name.trim()}
-                className="flex items-center justify-center w-12 h-12 rounded-full border border-white/15 bg-white/5 text-white/60 hover:text-white hover:border-white/30 hover:bg-white/10 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+                className="flex items-center justify-center w-16 h-16 rounded-full border border-white/15 bg-white/5 text-white/60 hover:text-white hover:border-white/30 hover:bg-white/10 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 title={isComplete ? "Play again" : "Play"}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M8 5v14l11-7z"/>
                 </svg>
               </motion.button>
@@ -203,7 +203,7 @@ function NamePlayerInner() {
                   setName(randomName);
                   handlePlay(randomName);
                 }}
-                className="px-6 py-3 text-sm font-medium tracking-widest uppercase text-white/40 border border-white/[0.06] rounded-full hover:text-white/70 hover:border-white/20 transition-all duration-300"
+                className="px-8 py-4 text-base font-medium tracking-widest uppercase text-white/40 border border-white/[0.06] rounded-full hover:text-white/70 hover:border-white/20 transition-all duration-300"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -213,7 +213,7 @@ function NamePlayerInner() {
                 <motion.button
                   type="button"
                   onClick={handleShare}
-                  className="px-6 py-3 text-sm font-medium tracking-widest uppercase text-white/40 border border-white/[0.06] rounded-full hover:text-white/70 hover:border-white/20 transition-all"
+                  className="px-8 py-4 text-base font-medium tracking-widest uppercase text-white/40 border border-white/[0.06] rounded-full hover:text-white/70 hover:border-white/20 transition-all"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   whileHover={{ scale: 1.05 }}
