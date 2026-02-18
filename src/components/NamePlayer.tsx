@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { playName, getLetterColor, MODES, type SoundMode } from '@/lib/audio';
 import { getRandomName } from '@/lib/names';
 import Visualizer, { type Ring } from '@/components/Visualizer';
+import FloatingShapes from '@/components/FloatingShapes';
 
 function isValidMode(m: string | null): m is SoundMode {
   return !!m && MODES.some(mode => mode.id === m);
@@ -101,6 +102,7 @@ function NamePlayerInner() {
 
   return (
     <main className="relative flex flex-col items-center justify-center min-h-dvh px-6 overflow-hidden select-none">
+      <FloatingShapes />
       <Visualizer
         rings={rings}
         displayName={displayName}
