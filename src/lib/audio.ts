@@ -550,8 +550,8 @@ export function playName(name: string, mode: SoundMode, callbacks: PlaybackCallb
   const letters = name.toLowerCase().replace(/[^a-z]/g, '').split('');
   if (letters.length === 0) return;
 
-  const totalDuration = Math.min(3, Math.max(1, letters.length * 0.2));
-  const onsetInterval = totalDuration / letters.length;
+  const onsetInterval = 0.22;
+  const totalDuration = letters.length * onsetInterval;
 
   const masterGain = ctx.createGain();
   masterGain.gain.value = 0.3;
