@@ -84,9 +84,10 @@ function NamePlayerInner() {
 
   const handleModeChange = (newMode: SoundMode) => {
     setMode(newMode);
-    // If a name has been played, replay in new mode immediately
-    if (displayName && !isPlaying) {
-      handlePlay(displayName, newMode);
+    // If there's a name, replay in new mode immediately (use current input, not last played)
+    const currentName = name.trim() || displayName;
+    if (currentName && !isPlaying) {
+      handlePlay(currentName, newMode);
     }
   };
 
